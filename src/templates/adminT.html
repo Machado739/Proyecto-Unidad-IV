@@ -75,59 +75,87 @@
 
     <!-- Productos existentes en columnas -->
     <div class="col-md-9">
-        <h2 class="mb-4">Productos Existentes</h2>
-        <div class="row" id="productList">
-            <!-- Agrega este bloque de código donde deseas mostrar la lista de productos -->
-            {% for product in products %}
-            <div class="border p-3 mb-4">
-                <p>Codigo: {{ product.id }}</p>
-                <p>Nombre: {{ product.name }}</p>
-                <p>Precio: ${{ product.price }}</p>
-                <img src="{{ product.image_url }}" alt="Imagen del producto" class="product-image-admin">
-              
-                <!-- Botón para mostrar el formulario de edición -->
-                <button class="btn btn-primary" data-toggle="modal" data-target="#editProductModal{{ product.id }}">Editar</button>
-              
-                <!-- Botón para borrar el producto -->
-                <button class="btn btn-danger" onclick="confirmDelete({{ product.id }})">Borrar</button>
-              
-                <!-- Modal para el formulario de edición -->
-                <div class="modal fade" id="editProductModal{{ product.id }}" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel{{ product.id }}" aria-hidden="true">aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="editProductModalLabel{{ product.id }}">Editar Producto</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
+      <h2 class="mb-4">Productos Existentes</h2>
+      <div class="row" id="productList">
+          <!-- Agrega este bloque de código donde deseas mostrar la lista de productos -->
+          {% for product in products %}
+          <div class="col-lg-4 col-md-6 mb-4"> <!-- Ajusta las clases aquí según tus necesidades -->
+              <div class="border p-3">
+                  <p>Codigo: {{ product.id }}</p>
+                  <p>Nombre: {{ product.name }}</p>
+                  <p>Precio: ${{ product.price }}</p>
+                  <img src="{{ product.image_url }}" alt="Imagen del producto" class="product-image-admin img-fluid">
+                
+                  <!-- Botón para mostrar el formulario de edición -->
+                  <button class="btn btn-primary" data-toggle="modal" data-target="#editProductModal{{ product.id }}">Editar</button>
+                
+                  <!-- Botón para borrar el producto -->
+                  <button class="btn btn-danger" onclick="confirmDelete({{ product.id }})">Borrar</button>
+                
+                  <!-- Modal para el formulario de edición -->
+                  <div class="modal fade" id="editProductModal{{ product.id }}" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel{{ product.id }}" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                          <div class="modal-content">
+                              <div class="modal-header">
+                                  <h5 class="modal-title" id="editProductModalLabel{{ product.id }}">Editar Producto</h5>
+                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                      <span aria-hidden="true">&times;</span>
+                                  </button>
+                              </div>
+                              <div class="modal-body">
+                                  <form method="post" action="{{ url_for('admin') }}">
+                                      <input type="hidden" name="editProduct" value="{{ product.id }}">
+                                      <div class="form-group">
+                                          <label for="editName{{ product.id }}">Nombre del Producto:</label>
+                                          <input type="text" id="editName{{ product.id }}" name="editName" class="form-control" value="{{ product.name }}" required>
+                                      </div>
+                                      <div class="form-group">
+                                          <label for="editPrice{{ product.id }}">Precio:</label>
+                                          <input type="number" id="editPrice{{ product.id }}" name="editPrice" class="form-control" value="{{ product.price }}" required>
+                                      </div>
+                                      <div class="form-group">
+                                          <label for="editImage{{ product.id }}">URL de la Imagen:</label>
+                                          <input type="url" id="editImage{{ product.id }}" name="editImage" class="form-control" value="{{ product.image_url }}" required>
+                                      </div>
+                                      <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                  </form>
+                              </div>
+                          </div>
                       </div>
-                      <div class="modal-body">
-                        <form method="post" action="{{ url_for('admin') }}">
-                          <input type="hidden" name="editProduct" value="{{ product.id }}">
-                          <div class="form-group">
-                            <label for="editName{{ product.id }}">Nombre del Producto:</label>
-                            <input type="text" id="editName{{ product.id }}" name="editName" class="form-control" value="{{ product.name }}" required>
-                          </div>
-                          <div class="form-group">
-                            <label for="editPrice{{ product.id }}">Precio:</label>
-                            <input type="number" id="editPrice{{ product.id }}" name="editPrice" class="form-control" value="{{ product.price }}" required>
-                          </div>
-                          <div class="form-group">
-                            <label for="editImage{{ product.id }}">URL de la Imagen:</label>
-                            <input type="url" id="editImage{{ product.id }}" name="editImage" class="form-control" value="{{ product.image_url }}" required>
-                          </div>
-                          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                        </form>
-                      </div>
-                    </div>
                   </div>
-                </div>
               </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
+          </div>
+          {% endfor %}
+      </div>
+  </div>
 
+
+   <!-- Formulario para agregar usuarios -->
+   <h2 class="mt-4">Agregar Nuevo Usuario</h2>
+   <form method="post" action="{{ url_for('add_user') }}">
+       <div class="form-group">
+           <label for="username">Nombre de Usuario:</label>
+           <input type="text" id="username" name="username" class="form-control" required>
+       </div>
+       <div class="form-group">
+           <label for="password">Contraseña:</label>
+           <input type="password" id="password" name="password" class="form-control" required>
+       </div>
+       <div class="form-group">
+           <label for="full_name">Nombre Completo:</label>
+           <input type="text" id="full_name" name="full_name" class="form-control" required>
+       </div>
+       <div class="form-group">
+           <label for="user_type">Tipo de Usuario:</label>
+           <select id="user_type" name="user_type" class="form-control" required>
+               <option value="1">Administrador</option>
+               <option value="2">Cliente</option>
+           </select>
+       </div>
+       <button type="submit" class="btn btn-primary">Agregar Usuario</button>
+   </form>
+</div>
+  
 <script>
 
 

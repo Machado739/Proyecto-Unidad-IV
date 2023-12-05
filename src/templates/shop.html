@@ -64,38 +64,113 @@
 
 <div class="container mt-4">
     <div class="row">
-        <div class="col-lg-12 col-md-12 col-12">
-            <h1>Tienda</h1>
-            <div class="row" id="productContainer">
-                <!-- Los productos disponibles se listarán en columnas aquí -->
-            </div>
+        <div class="col-12">
+            <h1 class="text-center mb-4">Tienda</h1>
         </div>
+    </div>
 
-        <div class="col-lg-12 col-md-12">
-            <h3>Resumen de Compra</h3>
-            <table class="table table-striped" style="background-color: #ffd4d4; border-radius: 15px;">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unitario</th>
-                        <th>Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody id="resumenCompra">
-                    <!-- Los detalles de la compra se generarán dinámicamente con JavaScript -->
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="3">Total:</td>
-                        <td id="total"></td>
-                    </tr>
-                </tfoot>
-            </table>
-            <button class="btn btn-primary" id="botonComprar" style="display: block; margin: 0 auto;">Confirmar Compra</button>
+        <!-- Mostrar productos -->
+    <div class="row" id="productList">
+        {% for product in products %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <img src="{{ product.image_url }}" alt="Imagen del producto" class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text">Código: {{ product.id }}</p>
+                        <p class="card-text">Precio: ${{ product.price }}</p>
+                        
+                        <!-- Agrega botón para agregar al carrito -->
+                        <button class="btn btn-primary" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }})">Agregar al carrito</button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+
+    <div class="container mt-4">
+        <h2>Carrito de Compras</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre del Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                </tr>
+            </thead>
+            <tbody id="cartTableBody">
+                <!-- Aquí se insertarán las filas del carrito mediante JavaScript -->
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="showPurchaseModal()">Comprar</button>
+
+    </div>
+    <!-- Modal para ingresar la cantidad -->
+    <div class="modal fade" id="quantityModal" tabindex="-1" role="dialog" aria-labelledby="quantityModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quantityModalLabel">Seleccionar Cantidad</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="quantityInput">Cantidad:</label>
+                <input type="number" id="quantityInput" class="form-control" min="1" value="1">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="addProductToCart()">Agregar al carrito</button>
+            </div>
         </div>
     </div>
 </div>
+
+    
+
+<!-- Modal para mostrar el ticket de compra -->
+<div class="modal fade" id="purchaseModal" tabindex="-1" role="dialog" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="purchaseModalLabel">Ticket de Compra</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenido del ticket de compra -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nombre del Artículo</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseTableBody">
+                        <!-- Aquí se generará dinámicamente el contenido de la tabla -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2" class="text-right"><strong>Total:</strong></td>
+                            <td id="totalAmount">$0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
 
 
 <!-- Modal de la Calculadora -->
@@ -208,6 +283,7 @@ function calculate(num1, num2, operator) {
     }
 }
 
+ 
 // Agregar event listener para botones
 buttons.addEventListener("click", function (event) {
     if (event.target.tagName === "BUTTON") {
@@ -217,11 +293,7 @@ buttons.addEventListener("click", function (event) {
 });
 });
 
-</script>
 
-
-<!-- scrip para que admin de alta productos -->
-<script>
     const userRole = "{{ current_user.get_user_type() }}";
 
     // Modifica 'adminContent' según el ID o clase del elemento que deseas mostrar/ocultar
@@ -249,48 +321,6 @@ buttons.addEventListener("click", function (event) {
     let availableProducts = JSON.parse(localStorage.getItem('products')) || [];
     let cartItems = [];
 
-    function addToCart(productId, quantity) {
-        const productToAdd = availableProducts.find(product => product.id === productId);
-        if (productToAdd) {
-            // Agregar el producto al carrito
-            const existingCartItem = cartItems.find(item => item.id === productToAdd.id);
-            if (existingCartItem) {
-                existingCartItem.quantity += quantity;
-            } else {
-                cartItems.push({ id: productToAdd.id, name: productToAdd.name, price: productToAdd.price, quantity });
-            }
-            updateCartContent();
-            
-        } 
-    }
-
-    function updateCartContent() {
-const resumenCompra = document.getElementById("resumenCompra");
-const total = document.getElementById("total");
-// Limpia el contenido anterior del resumen de compra
-resumenCompra.innerHTML = "";
-
-let subtotalTotal = 0;
-
-cartItems.forEach(item => {
-    const subtotal = item.price * item.quantity;
-    subtotalTotal += subtotal;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-        <td>${item.name}</td>
-     
-        <td>${item.quantity}</td>
-        <td>$${item.price}</td>
-        <td>$${subtotal}</td>
-    `;
-
-    resumenCompra.appendChild(row);
-});
-
-// Actualiza el total
-total.textContent = `$${subtotalTotal}`;
-}
     function updateProductList() {
         const productContainer = document.getElementById("productContainer");
         productContainer.innerHTML = "";
@@ -317,137 +347,104 @@ total.textContent = `$${subtotalTotal}`;
             productContainer.appendChild(productColumn);
         });
     }
-
-    // incrementar y decrementar la cantidad
-    function incrementQuantity(elementId) {
-        const quantityInput = document.getElementById(elementId);
-        quantityInput.value = parseInt(quantityInput.value) + 1;
-    }
-
-    function decrementQuantity(elementId) {
-        const quantityInput = document.getElementById(elementId);
-        const currentValue = parseInt(quantityInput.value);
-        if (currentValue > 1) {
-            quantityInput.value = currentValue - 1;
-        }
-    }
-     // Función para generar el ticket de compra
-function generarTicketDeCompra() {
-    // Crea una ventana emergente
-    const nuevaVentana = window.open("", "Ticket de Compra", "width=500,height=500");
-
     
-    // Crea el contenido del ticket de compra en la ventana emergente
-    let ticketContenido = `
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Ticket de Compra</title>
-            <link rel="stylesheet" href="css/style.css">
-            <style>
-                /* Estilos para el ticket de compra */
-.ticket {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 2px solid #ffd4d4;
-    font-family: Arial, sans-serif;
-}
 
-.ticket h2 {
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 20px;
-}
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
 
-th, td {
-    border: 1px solid #ffd4d4;
-    padding: 8px;
-}
 
-thead {
-    background-color: #333;
-    color: #fff;
-}
+// Función para agregar un producto al carrito de compras
+window.addToCart = function (productId, productName, productPrice) {
+    // Abre el modal de cantidad
+    $('#quantityModal').modal('show');
 
-th {
-    font-weight: bold;
-}
+    // Define la función para agregar el producto al carrito al hacer clic en "Agregar al carrito" en el modal
+    window.addProductToCart = function () {
+        const quantity = document.getElementById("quantityInput").value;
 
-tfoot {
-    background-color: #333;
-    color: #fff;
-    font-weight: bold;
-}
-             </style>
-        </head>
-        <body>
-            <div class="ticket">
-                <h2>Ticket de Compra</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre del Artículo</th>
-                            <th>Cantidad</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-    `;
+        // Crear un objeto que representa un elemento del carrito
+        const cartItem = {
+            product: {
+                id: productId,
+                name: productName,
+                price: productPrice,
+            },
+            quantity: parseInt(quantity),
+        };
 
-    // Itera a través de los elementos del carrito
-    let totalCompra = 0;
+        // Agregar el elemento del carrito a la lista
+        cartItems.push(cartItem);
+
+        // Actualizar la interfaz de usuario
+        updateCartUI();
+
+        // Cerrar el modal
+        $('#quantityModal').modal('hide');
+    };
+};
+
+
+// Función para actualizar la interfaz del carrito de compras
+function updateCartUI() {
+    const cartTableBody = document.getElementById("cartTableBody");
+
+    // Limpiar el contenido actual de la tabla
+    cartTableBody.innerHTML = "";
+
+    // Iterar sobre los elementos del carrito y agregar filas a la tabla
     cartItems.forEach(item => {
-        const subtotal = item.price * item.quantity;
-        totalCompra += subtotal;
-        ticketContenido += `
-            <tr>
-                <td>${item.name}</td>
-                <td>${item.quantity}</td>
-                <td>$${subtotal.toFixed(2)}</td>
-            </tr>
-        `;
+        const row = cartTableBody.insertRow();
+        
+        // Agregar celdas con los detalles del producto
+        const cellName = row.insertCell(0);
+        const cellPrice = row.insertCell(1);
+        const cellQuantity = row.insertCell(2);
+
+        // Llenar las celdas con datos
+        cellName.textContent = item.product.name;
+        cellPrice.textContent = `$${item.product.price}`;
+        cellQuantity.textContent = item.quantity;
+    });
+}
+
+
+
+
+// Función para mostrar el modal con el ticket de compra
+function showPurchaseModal() {
+    // Obtener el elemento del modal de compra
+    const purchaseModal = $('#purchaseModal');
+
+    // Limpiar el contenido anterior del modal
+    purchaseModal.find('.modal-body').html('');
+
+    // Agregar el contenido del ticket de compra al modal
+    const purchaseContent = document.createElement('div');
+    purchaseContent.innerHTML = '<h3>Ticket de Compra</h3>';
+    purchaseContent.innerHTML += '<p>Detalles de la compra:</p>';
+
+    // Iterar sobre los elementos del carrito y agregarlos al ticket de compra
+    cartItems.forEach(item => {
+        purchaseContent.innerHTML += `<p>${item.product.name} - Cantidad: ${item.quantity} - Precio: $${item.product.price * item.quantity}</p>`;
     });
 
-    // Agrega el total al ticket
-    ticketContenido += `
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td>Total:</td>
-                            <td></td>
-                            <td>$${totalCompra.toFixed(2)}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </body>
-        </html>
-    `;
+    // Agregar el contenido al modal
+    purchaseModal.find('.modal-body').append(purchaseContent);
 
-    // Inserta el contenido en la ventana emergente
-    nuevaVentana.document.write(ticketContenido);
+    // Mostrar el modal
+    purchaseModal.modal('show');
 }
 
-// Asocia la función al evento de clic del botón "Comprar"
-const botonComprar = document.getElementById("botonComprar");
-botonComprar.addEventListener("click", generarTicketDeCompra);
-    // Actualiza la lista de productos disponibles al cargar la página
-    updateProductList();
-    updateCartContent();
+
+
+
+
 
 
 </script>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 {% endblock %}
 
 {% with messages = get_flashed_messages() %}

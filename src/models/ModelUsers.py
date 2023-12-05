@@ -45,3 +45,20 @@ class ModelUsers:
             raise Exception(ex)
         finally:
             cursor.close()
+    @staticmethod
+    def add_user(mysql, username, password, full_name, user_type):
+        try:
+            cursor =  mysql.connection.cursor()
+
+            # Llamar al procedimiento almacenado
+            cursor.callproc('sp_AddUser', (username, password, full_name, user_type))
+
+            # Confirmar los cambios en la base de datos
+            mysql.connection.commit()
+        except Exception as e:
+            # Manejar el error, si es necesario
+            raise e
+        finally:
+            # Cerrar el cursor y la conexión
+            cursor.close()
+          

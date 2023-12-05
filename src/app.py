@@ -151,10 +151,36 @@ def admin():
     # Renderizar la plantilla y pasar los productos a la plantilla
     return render_template("adminT.html", products=products)
 
+# ...
+
+@app.route("/add_user", methods=["POST"])
+@admin_required
+def add_user():
+    if request.method == "POST":
+        try:
+            username = request.form['username']
+            password = request.form['password']
+            full_name = request.form['full_name']
+            user_type = int(request.form['user_type'])
+
+            # Llamada al nuevo método para agregar usuario en tu modelo
+            ModelUsers.add_user(mysql, username, password, full_name, user_type)
+
+            flash(f"Usuario '{username}' agregado exitosamente.", 'success')
+            return redirect(url_for("admin"))
+        except Exception as e:
+            print("Error al agregar usuario:", e)
+            flash("Ocurrió un error al agregar el usuario. Por favor, inténtalo nuevamente.", 'error')
+            return redirect(url_for("admin"))
+    else:
+        return redirect(url_for("admin"))
+
 @app.route("/shop")
 @login_required
 def shop():
-    return render_template("shop.html")
+    products = ModelProducts.get_all_products(mysql)
+    
+    return render_template('shop.html', products=products)
 
 @app.route("/info")
 @login_required
