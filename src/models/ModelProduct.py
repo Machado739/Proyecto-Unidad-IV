@@ -45,3 +45,27 @@ class ModelProducts:
             raise Exception(ex)
         finally:
             cursor.close()
+    @classmethod
+    def delete_product(cls, db, product_id):
+        try:
+            cursor = db.connection.cursor()
+            cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
+            db.connection.commit()
+        except Exception as ex:
+            print("Error al borrar producto:", ex)
+            raise Exception(ex)
+        finally:
+            cursor.close()
+
+    @classmethod
+    def update_product(cls, db, product):
+        try:
+            cursor = db.connection.cursor()
+            cursor.execute("UPDATE products SET name = %s, price = %s, image_url = %s WHERE id = %s",
+                           (product.name, product.price, product.image_url, product.id))
+            db.connection.commit()
+        except Exception as ex:
+            print("Error al actualizar producto:", ex)
+            raise Exception(ex)
+        finally:
+            cursor.close()

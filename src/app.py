@@ -91,12 +91,65 @@ def add_product():
         return redirect(url_for("admin"))
 
 
+@app.route("/edit_product/<int:product_id>", methods=["GET", "POST"])
+@login_required
+def edit_product(product_id):
+    if request.method == "GET":
+        # Obtener el producto para mostrar en el formulario de edición
+        product = ModelProducts.get_product_by_id(mysql, product_id)
+        return render_template("edit_product.html", product=product)
+    elif request.method == "POST":
+        # Procesar el formulario de edición
+        updated_name = request.form['editName']
+        updated_price = float(request.form['editPrice'])
+        updated_image_url = request.form['editImage']
+
+        updated_product = Product(id=product_id, name=updated_name, price=updated_price, image_url=updated_image_url)
+
+        ModelProducts.update_product(mysql, updated_product)
+
+        flash(f"Producto '{updated_product.name}' actualizado exitosamente.", 'success')
+        return redirect(url_for("admin"))
+
+@app.route("/admin/delete/<int:product_id>")
+@login_required
+def delete_product(product_id):
+    try:
+        # Verifica si el product_id es 0, si es así, redirige a la página de administrador
+        if product_id == 0:
+            return redirect(url_for("admin"))
+
+        ModelProducts.delete_product(mysql, product_id)
+        flash(f"Producto eliminado exitosamente.", 'success')
+    except Exception as e:
+        print("Error al borrar producto:", e)
+        flash("Ocurrió un error al borrar el producto. Por favor, inténtalo nuevamente.", 'error')
+
+    return redirect(url_for("admin"))
+
 @app.route("/admin", methods=["GET", "POST"])
 @login_required
 def admin():
-    products = ModelProducts.get_all_products(mysql)
-    return render_template("adminT.html", products=products)
+    if request.method == "POST" and "editProduct" in request.form:
+        # Procesar el formulario de edición
+        product_id = int(request.form["editProduct"])
+        updated_name = request.form['editName']
+        updated_price = float(request.form['editPrice'])
+        updated_image_url = request.form['editImage']
 
+        updated_product = Product(id=product_id, name=updated_name, price=updated_price, image_url=updated_image_url)
+
+        ModelProducts.update_product(mysql, updated_product)
+
+        flash(f"Producto '{updated_product.name}' actualizado exitosamente.", 'success')
+        return redirect(url_for("admin"))
+
+    # Obtener todos los productos
+    products = ModelProducts.get_all_products(mysql)
+    print("Lista de productos:", products)
+
+    # Renderizar la plantilla y pasar los productos a la plantilla
+    return render_template("adminT.html", products=products)
 
 @app.route("/shop")
 @login_required
