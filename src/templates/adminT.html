@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block miCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='../../static/css/style.css') }}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% endblock %}
+
+{% block titulo %}Catálogo de Productos{% endblock %}
+
+{% block cuerpo %}
+<script>
+    // Función para verificar si el usuario ha iniciado sesión como administrador
+    function checkUserLogin() {
+        const userRole = "{{ current_user.get_user_type() }}";
+        if (userRole !== "1") {
+            // Redirige al usuario a la página de inicio de sesión si no ha iniciado sesión como administrador
+            window.location.href = "login";
+        }
+    }
+
+    // Llama a la función de verificación al cargar la página
+    checkUserLogin();
+</script>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+    <a class="navbar-brand" href="#">XTREMETEPC</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin') }}" id="adminContent">Catálogo de Productos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('shop') }}">Tienda</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('info') }}">Acerca de</a>
+            </li>
+            <li class="nav-item">
+                <a class="btn btn-light" href="{{ url_for('logout') }}" onclick="logOut()">Cerrar Sesión</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <div class="text-center">
+        <div style="background-color: #f00000; display: inline-block; padding: 10px;">
+            <img src="https://www.xtremetecpc.com/images/media/2022/11/armarpc2.png" class="banner" alt="Imagen del banner">
+        </div>
+    </div>
+</div>
+    <div class="container">
+        <h1 class="mt-4">Administrar Productos</h1>
+
+        <!-- Formulario para agregar productos -->
+        <div class="mt-4">
+            <form id="addProductForm" method="post" action="{{ url_for('add_product') }}">
+                <div class="form-group">
+                    <label for="productName">Nombre del Producto:</label>
+                    <input type="text" id="productName" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="productPrice">Precio:</label>
+                    <input type="number" id="productPrice" name="price" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="productImage">URL de la Imagen:</label>
+                    <input type="url" id="productImage" name="image_url" class="form-control" placeholder="https://ejemplo.com/imagen.jpg" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Agregar Producto</button>
+            </form>
+        </div>
+
+        <!-- Productos existentes en columnas -->
+        <div class="col-md-9">
+            <h2 class="mb-4">Productos Existentes</h2>
+            <div class="row" id="productList">
+                <!-- La lista de productos se generará aquí -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    
+    function logout() {
+        localStorage.removeItem("userRole");
+        window.location.href = "login.html"; // Redirige al usuario a la página de inicio de sesión
+    }
+
+    const userRole = localStorage.getItem("userRole");
+
+    if (userRole === "admin") {
+        // Si el usuario es un administrador, mostrar el botón "Catálogo de Productos"
+        document.getElementById("adminContent").style.display = "block";
+    } else {
+        // Si el usuario es cliente, ocultar el botón "Catálogo de Productos"
+        document.getElementById("adminContent").style.display = "none";
+    }
+    function validateAndAddProduct() {
+        const productName = document.getElementById("productName").value;
+        const productPrice = document.getElementById("productPrice").value;
+        const productImage = document.getElementById("productImage").value;
+
+        const productNameError = document.getElementById("productNameError");
+        const productPriceError = document.getElementById("productPriceError");
+        const productImageError = document.getElementById("productImageError");
+
+        productNameError.textContent = '';
+        productPriceError.textContent = '';
+        productImageError.textContent = '';
+
+        if (productName.trim() === '') {
+            productNameError.textContent = 'El nombre del producto es requerido.';
+            productNameError.style.color = 'red';
+        }
+        if (productPrice.trim() === '') {
+            productPriceError.textContent = 'El precio del producto es requerido.';
+            productPriceError.style.color = 'red';
+        }
+        if (productImage.trim() === '') {
+            productImageError.textContent = 'La URL de la imagen es requerida.';
+            productImageError.style.color = 'red';
+        }
+
+        if (productName.trim() === '' || productPrice.trim() === '' || productImage.trim() === '') {
+            return;
+        }
+
+        addProduct(productName, productPrice, productImage);
+    }
+    // Inicializar la variable "products" desde el almacenamiento local
+    let products = JSON.parse(localStorage.getItem('products')) || [];
+    let nextProductId = products.length + 1;
+
+
+
+    // Función para agregar un producto
+    function addProduct(productName, productPrice, productImage) {
+        products.push({ id: nextProductId, name: productName, price: productPrice, image: productImage });
+        nextProductId++;
+        updateProductList();
+        saveProducts();
+        clearForm();
+    }
+
+    // Función para actualizar la lista de productos en la página
+    function updateProductList() {
+        const productList = document.getElementById("productList");
+        productList.innerHTML = "";
+        products.forEach(product => {
+            const productColumn = document.createElement("div");
+            productColumn.className = "col-md-4 col-sm-6 col-12 product-admin";
+            productColumn.innerHTML = `<div class="border p-3 mb-4">
+                <p>Codigo: ${product.id}</p>
+                <p>Nombre: ${product.name}</p>
+                <p>Precio: $${product.price}</p>
+                <img src="${product.image}" alt="Imagen del producto" class="product-image-admin">
+                <button class="btn btn-danger" onclick="removeProduct(${product.id})">Eliminar</button>
+                <button class="btn btn-primary" onclick="editProduct(${product.id})">Editar</button>
+                <div class="edit-form" id="editForm${product.id}">
+                    <h4>Editar Producto</h4>
+                    <div class="form-group">
+                        <label for="editName${product.id}">Nombre del Producto:</label>
+                        <input type="text" id="editName${product.id}" class="form-control" value="${product.name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrice${product.id}">Precio:</label>
+                        <input type="number" id="editPrice${product.id}" class="form-control" value="${product.price}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editImage${product.id}">URL de la Imagen:</label>
+                        <input type="url" id="editImage${product.id}" class="form-control" value="${product.image}" required>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveEditedProduct(${product.id})">Guardar</button>
+                </div>
+            </div>`;
+            productList.appendChild(productColumn);
+        });
+    }
+
+    // Función para editar un producto
+    function editProduct(productId) {
+        const editForm = document.getElementById(`editForm${productId}`);
+        if (editForm) {
+            editForm.classList.add("show");
+        }
+    }
+
+    // Función para guardar un producto editado
+    function saveEditedProduct(productId) {
+        const editForm = document.getElementById(`editForm${productId}`);
+        if (editForm) {
+            const editedName = document.getElementById(`editName${productId}`).value;
+            const editedPrice = document.getElementById(`editPrice${productId}`).value;
+            const editedImage = document.getElementById(`editImage${productId}`).value;
+
+            const product = products.find(item => item.id === productId);
+            if (product) {
+                product.name = editedName;
+                product.price = editedPrice;
+                product.image = editedImage;
+                updateProductList();
+                saveProducts();
+                editForm.classList.remove("show");
+            }
+        }
+    }
+
+    // Función para eliminar un producto
+    function removeProduct(productId) {
+        products = products.filter(product => product.id !== productId);
+        updateProductList();
+        saveProducts();
+    }
+
+    // Función para limpiar el formulario
+    function clearForm() {
+        document.getElementById("productName").value = "";
+        document.getElementById("productPrice").value = "";
+        document.getElementById("productImage").value = "";
+    }
+
+    // Función para guardar la lista de productos en el almacenamiento local
+    function saveProducts() {
+        localStorage.setItem('products', JSON.stringify(products));
+    }
+
+    // Actualizar la lista de productos en la página al cargar
+    updateProductList();
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="container mt-3">
+      <div class="alert alert-warning">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}
+
+<script>
+    function logOut() {
+        // Agrega un registro de log al hacer clic en Logout
+        console.log("Usuario ha hecho Logout");
+    }
+</script>
