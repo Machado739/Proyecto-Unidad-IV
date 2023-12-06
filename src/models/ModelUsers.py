@@ -83,3 +83,36 @@ class ModelUsers:
             raise Exception(ex)
         finally:
             cursor.close()
+            
+    @staticmethod
+    def update_user(mysql, user):
+        try:
+            cursor = mysql.connection.cursor()
+
+            # Llamar al procedimiento almacenado para modificar el usuario
+            cursor.callproc('sp_ModifyUser', (user.id, user.username, user.fullname, user.usertype))
+
+            # Confirmar los cambios en la base de datos
+            mysql.connection.commit()
+        except Exception as e:
+            # Manejar el error, si es necesario
+            raise e
+        finally:
+            # Cerrar el cursor y la conexión
+            cursor.close()
+    @staticmethod
+    def delete_user(mysql, user_id):
+        try:
+            cursor = mysql.connection.cursor()
+
+             # Call the stored procedure to delete the user
+            cursor.callproc('sp_DeleteUser', (user_id,))
+
+            # Confirm the changes in the database
+            mysql.connection.commit()
+        except Exception as e:
+            # Handle the error, if necessary
+            raise e
+        finally:
+            # Close the cursor and connection
+            cursor.close()

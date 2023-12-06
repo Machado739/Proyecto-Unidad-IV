@@ -143,7 +143,7 @@ def admin():
 
     products = ModelProducts.get_all_products(mysql)
     users = ModelUsers.get_all_users(mysql)
-    print("Lista de productos:", products)
+  
 
     # Renderizar la plantilla y pasar los productos a la plantilla
     return render_template("adminT.html", products=products, users=users)
@@ -172,6 +172,46 @@ def add_user():
     else:
         return redirect(url_for("admin"))
 
+@app.route("/edit_user/<int:user_id>", methods=["GET", "POST"])
+@admin_required
+def edit_user(user_id):
+    if request.method == "GET":
+        # Obtener el usuario para mostrar en el formulario de edición
+        user = ModelUsers.get_by_id(mysql, user_id)
+        return render_template("edit_user.html", user=user)
+    elif request.method == "POST":
+        try:
+            # Procesar el formulario de edición
+            updated_username = request.form['editUsername']          
+            updated_full_name = request.form['editFullName']
+            updated_user_type = int(request.form['editUserType'])
+
+            # Crear un nuevo objeto User con los datos actualizados
+            updated_user = User(id=user_id, username=updated_username, fullname=updated_full_name, usertype=updated_user_type)
+
+            # Llamar al método para actualizar el usuario en el modelo
+            ModelUsers.update_user(mysql, updated_user)
+
+            flash(f"Usuario '{updated_user.username}' actualizado exitosamente.", 'success')
+            return redirect(url_for("admin"))
+        except Exception as e:
+            print("Error al actualizar usuario:", e)
+            flash("Ocurrió un error al actualizar el usuario. Por favor, inténtalo nuevamente.", 'error')
+            return redirect(url_for("admin"))
+        
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    try:
+        ModelUsers.delete_user(mysql, user_id)
+        flash(f"Usuario eliminado exitosamente.", 'success')
+    except Exception as e:
+        print("Error al borrar usuario:", e)
+        flash("Ocurrió un error al borrar el usuario. Por favor, inténtalo nuevamente.", 'error')
+
+    return redirect(url_for("admin"))
+
+
 @app.route("/shop")
 @login_required
 def shop():
@@ -179,7 +219,7 @@ def shop():
     
     return render_template('shop.html', products=products)
 
-@app.route("/info")
+@app.route("/info")                                                            
 @login_required
 def info():
     return render_template("info.html")
