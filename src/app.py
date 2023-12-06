@@ -6,9 +6,6 @@ from config import config
 from models.ModelUsers import ModelUsers, User
 from models.ModelProduct import Product, ModelProducts
 
-
-
-
 app = Flask(__name__)
 mysql = MySQL(app)
 app.secret_key = '123456789'
@@ -144,12 +141,12 @@ def admin():
         flash(f"Producto '{updated_product.name}' actualizado exitosamente.", 'success')
         return redirect(url_for("admin"))
 
-    # Obtener todos los productos
     products = ModelProducts.get_all_products(mysql)
+    users = ModelUsers.get_all_users(mysql)
     print("Lista de productos:", products)
 
     # Renderizar la plantilla y pasar los productos a la plantilla
-    return render_template("adminT.html", products=products)
+    return render_template("adminT.html", products=products, users=users)
 
 # ...
 

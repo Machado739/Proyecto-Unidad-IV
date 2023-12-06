@@ -69,4 +69,3 @@ class ModelProducts:
             raise Exception(ex)
         finally:
             cursor.close()
-            

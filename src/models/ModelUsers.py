@@ -1,4 +1,6 @@
-from flask_login import UserMixin
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+
+
 
 class User(UserMixin):
     def __init__(self, id, username, password, fullname, usertype):
@@ -10,6 +12,7 @@ class User(UserMixin):
         
     def get_user_type(self):
         return self.usertype
+
 
 class ModelUsers:
     @classmethod
@@ -61,4 +64,22 @@ class ModelUsers:
         finally:
             # Cerrar el cursor y la conexión
             cursor.close()
-          
+            
+    @staticmethod
+    def get_all_users(mysql):
+        try:
+            cursor = mysql.connection.cursor()
+            cursor.execute("SELECT id, username, usertype, fullname FROM users")
+            rows = cursor.fetchall()
+
+            users = []
+            for row in rows:
+                user = User(row[0], row[1], '', row[3], row[2])
+                users.append(user)
+
+            return users
+        except Exception as ex:
+            print("Error al obtener todos los usuarios:", ex)
+            raise Exception(ex)
+        finally:
+            cursor.close()
