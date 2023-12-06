@@ -69,24 +69,25 @@
         </div>
     </div>
 
-        <!-- Mostrar productos -->
-    <div class="row" id="productList">
-        {% for product in products %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card h-100">
-                    <img src="{{ product.image_url }}" alt="Imagen del producto" class="card-img-top">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ product.name }}</h5>
-                        <p class="card-text">Código: {{ product.id }}</p>
-                        <p class="card-text">Precio: ${{ product.price }}</p>
-                        
-                        <!-- Agrega botón para agregar al carrito -->
-                        <button class="btn btn-primary" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }})">Agregar al carrito</button>
-                    </div>
+    
+    <!-- Mostrar productos -->
+<div class="row" id="productList">
+    {% for product in products %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 product">
+                <img src="{{ product.image_url }}" alt="Imagen del producto" class="card-img-top product-image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">Código: {{ product.id }}</p>
+                    <p class="card-text">Precio: ${{ product.price }}</p>
+                    <button class="btn btn-primary" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }})">Agregar al carrito</button>
                 </div>
             </div>
-        {% endfor %}
-    </div>
+        </div>
+    {% endfor %}
+</div>
+
+    
 
 
     <div class="container mt-4">

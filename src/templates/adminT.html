@@ -68,7 +68,7 @@
             <div class="form-group">
                 <label for="productImage">URL de la Imagen:</label>
                 <input type="url" id="productImage" name="image_url" class="form-control" placeholder="https://ejemplo.com/imagen.jpg" required>
-            </div>
+            </div>  
             <button type="submit" class="btn btn-primary">Agregar Producto</button>
         </form>
     </div>
@@ -77,20 +77,19 @@
     <div class="col-md-9">
       <h2 class="mb-4">Productos Existentes</h2>
             <div class="row" id="productList">
-                <!-- Agrega este bloque de código donde deseas mostrar la lista de productos -->
                 {% for product in products %}
             <div class="col-lg-4 col-md-6 mb-4"> <!-- Ajusta las clases aquí según tus necesidades -->
-                <div class="border p-3">
+                <div class="border p-3 productad">
                   <p>Codigo: {{ product.id }}</p>
                   <p>Nombre: {{ product.name }}</p>
                   <p>Precio: ${{ product.price }}</p>
                   <img src="{{ product.image_url }}" alt="Imagen del producto" class="product-image-admin img-fluid">
                 
                   <!-- Botón para mostrar el formulario de edición -->
-                  <button class="btn btn-primary" data-toggle="modal" data-target="#editProductModal{{ product.id }}">Editar</button>
+                <button class="btn btn-primary" data-toggle="modal" data-target="#editProductModal{{ product.id }}">Editar</button>
                 
                   <!-- Botón para borrar el producto -->
-                    <button class="btn btn-danger" onclick="confirmDelete({{ product.id }})">Borrar</button>
+                <button class="btn btn-danger" onclick="confirmDelete({{ product.id }})">Borrar</button>
                 
                             <!-- Modal para el formulario de edición -->
                             <div class="modal fade" id="editProductModal{{ product.id }}" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel{{ product.id }}" aria-hidden="true">
@@ -131,7 +130,7 @@
 
 
    <!-- Formulario para agregar usuarios -->
-        <h2 class="mt-4">Agregar Nuevo Usuario</h2>
+        <h2 class="mt-4 ">Agregar Nuevo Usuario</h2>
         <form method="post" action="{{ url_for('add_user') }}">
             <div class="form-group">
                 <label for="username">Nombre de Usuario:</label>
@@ -158,15 +157,11 @@
   
 
 
-
-
-
-
     <div class="container mt-4">
         <!-- Tabla de Usuarios -->
         <h2>Usuarios Registrados</h2>
         <div class="table-responsive">
-            <table class="table mt-3">
+            <table class="table mt-3 ">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -178,7 +173,7 @@
                 </thead>
                 <tbody>
                     {% for user in users %}
-                    <tr>
+                    <tr class="usua">
                         <td>{{ user.id }}</td>
                         <td>{{ user.username }}</td>
                         <td>{{ user.get_user_type() }}</td>
@@ -225,7 +220,6 @@
                                     </div>
                                 </div>
                             </div>
-                            </div>
     
                             <!-- Modal para confirmar la eliminación -->
                             <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
@@ -257,6 +251,13 @@
             </table>
         </div>
     </div>
+    
+
+
+
+
+
+
 
 <script>
 
@@ -272,7 +273,15 @@
         window.location.href = "login.html"; // Redirige al usuario a la página de inicio de sesión
     }
 
+    const userRole = localStorage.getItem("userRole");
 
+    if (userRole === "admin") {
+        // Si el usuario es un administrador, mostrar el botón "Catálogo de Productos"
+        document.getElementById("adminContent").style.display = "block";
+    } else {
+        // Si el usuario es cliente, ocultar el botón "Catálogo de Productos"
+        document.getElementById("adminContent").style.display = "none";
+    }
     function validateAndAddProduct() {
         const productName = document.getElementById("productName").value;
         const productPrice = document.getElementById("productPrice").value;
@@ -304,6 +313,30 @@
         }
 
         addProduct(productName, productPrice, productImage);
+    }
+    // Inicializar la variable "products" desde el almacenamiento local
+    let products = JSON.parse(localStorage.getItem('products')) || [];
+    let nextProductId = products.length + 1;
+
+    // Función para agregar un producto
+    function addProduct(productName, productPrice, productImage) {
+        products.push({ id: nextProductId, name: productName, price: productPrice, image: productImage });
+        nextProductId++;
+        updateProductList();
+        saveProducts();
+        clearForm();
+    }
+
+    // Función para guardar la lista de productos en el almacenamiento local
+    function saveProducts() {
+        localStorage.setItem('products', JSON.stringify(products));
+    }
+
+    // Función para eliminar un producto
+    function removeProduct(productId) {
+        products = products.filter(product => product.id !== productId);
+        updateProductList();
+        saveProducts();
     }
 
     // Función para limpiar el formulario

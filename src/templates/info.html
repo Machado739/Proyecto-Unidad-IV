@@ -18,9 +18,37 @@
         }
     }
 
+
+
     // Llama a la función de verificación al cargar la página
     checkUserLogin();
 </script>
+
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+    <a class="navbar-brand" href="#">XTREMETEPC</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin') }}" id="adminContent">Catálogo de Productos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('shop') }}">Tienda</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('info') }}">Acerca de</a>
+            </li>
+            <li class="nav-item">
+                <a class="btn btn-light" href="{{ url_for('logout') }}" onclick="logOut()">Cerrar Sesión</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
 
 <div class="container">
     <div class="card mt-5">

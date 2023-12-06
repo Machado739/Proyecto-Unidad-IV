@@ -202,7 +202,6 @@ def edit_user(user_id):
             print("Error al actualizar usuario:", e)
             flash("Ocurrió un error al actualizar el usuario. Por favor, inténtalo nuevamente.", 'error')
             return redirect(url_for("admin"))
-
         
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
 @admin_required
