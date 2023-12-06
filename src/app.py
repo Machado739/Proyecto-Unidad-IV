@@ -182,12 +182,16 @@ def edit_user(user_id):
     elif request.method == "POST":
         try:
             # Procesar el formulario de edición
-            updated_username = request.form['editUsername']          
+            updated_username = request.form['editUsername']
             updated_full_name = request.form['editFullName']
             updated_user_type = int(request.form['editUserType'])
 
+            # Obtener la contraseña actual del usuario
+            current_user_info = ModelUsers.get_by_id(mysql, user_id)
+            current_password = current_user_info.password
+
             # Crear un nuevo objeto User con los datos actualizados
-            updated_user = User(id=user_id, username=updated_username, fullname=updated_full_name, usertype=updated_user_type)
+            updated_user = User(id=user_id, username=updated_username, password=current_password, fullname=updated_full_name, usertype=updated_user_type)
 
             # Llamar al método para actualizar el usuario en el modelo
             ModelUsers.update_user(mysql, updated_user)
@@ -198,6 +202,7 @@ def edit_user(user_id):
             print("Error al actualizar usuario:", e)
             flash("Ocurrió un error al actualizar el usuario. Por favor, inténtalo nuevamente.", 'error')
             return redirect(url_for("admin"))
+
         
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
 @admin_required
