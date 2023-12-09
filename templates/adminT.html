@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% block miCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='../../static/css/style.css') }}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% endblock %}
+
+{% block titulo %}Catálogo de Productos{% endblock %}
+
+{% block cuerpo %}
+<script>
+    // Función para verificar si el usuario ha iniciado sesión como administrador
+    function checkUserLogin() {
+        const userRole = "{{ current_user.get_user_type() }}";
+        if (userRole !== "1") {
+            // Redirige al usuario a la página de inicio de sesión si no ha iniciado sesión como administrador
+            window.location.href = "login";
+        }
+    }
+
+    // Llama a la función de verificación al cargar la página
+    checkUserLogin();
+</script>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+    <a class="navbar-brand" href="#">XTREMETEPC</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin') }}" id="adminContent">Catálogo de Productos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('shop') }}">Tienda</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('info') }}">Acerca de</a>
+            </li>
+            <li class="nav-item">
+                <a class="btn btn-light" href="{{ url_for('logout') }}" onclick="logOut()">Cerrar Sesión</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <div class="text-center">
+        <div style="background-color: #f00000; display: inline-block; padding: 10px;">
+            <img src="https://www.xtremetecpc.com/images/media/2022/11/armarpc2.png" class="banner" alt="Imagen del banner">
+        </div>
+    </div>
+</div>
+<div class="container">
+    <h1 class="mt-4">Administrar Productos</h1>
+
+    <!-- Formulario para agregar productos -->
+    <div class="mt-4">
+        <form id="addProductForm" method="post" action="{{ url_for('add_product') }}">
+            <div class="form-group">
+                <label for="productName">Nombre del Producto:</label>
+                <input type="text" id="productName" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="productPrice">Precio:</label>
+                <input type="number" id="productPrice" name="price" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="productImage">URL de la Imagen:</label>
+                <input type="url" id="productImage" name="image_url" class="form-control" placeholder="https://ejemplo.com/imagen.jpg" required>
+            </div>  
+            <button type="submit" class="btn btn-primary">Agregar Producto</button>
+        </form>
+    </div>
+
+    <!-- Productos existentes en columnas -->
+    <div class="col-md-9">
+      <h2 class="mb-4">Productos Existentes</h2>
+            <div class="row" id="productList">
+                {% for product in products %}
+            <div class="col-lg-4 col-md-6 mb-4"> <!-- Ajusta las clases aquí según tus necesidades -->
+                <div class="border p-3 productad">
+                  <p>Codigo: {{ product.id }}</p>
+                  <p>Nombre: {{ product.name }}</p>
+                  <p>Precio: ${{ product.price }}</p>
+                  <img src="{{ product.image_url }}" alt="Imagen del producto" class="product-image-admin img-fluid">
+                
+                  <!-- Botón para mostrar el formulario de edición -->
+                <button class="btn btn-primary" data-toggle="modal" data-target="#editProductModal{{ product.id }}">Editar</button>
+                
+                  <!-- Botón para borrar el producto -->
+                <button class="btn btn-danger" onclick="confirmDelete({{ product.id }})">Borrar</button>
+                
+                            <!-- Modal para el formulario de edición -->
+                            <div class="modal fade" id="editProductModal{{ product.id }}" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel{{ product.id }}" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editProductModalLabel{{ product.id }}">Editar Producto</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form method="post" action="{{ url_for('admin') }}">
+                                            <input type="hidden" name="editProduct" value="{{ product.id }}">
+                                            <div class="form-group">
+                                                <label for="editName{{ product.id }}">Nombre del Producto:</label>
+                                                <input type="text" id="editName{{ product.id }}" name="editName" class="form-control" value="{{ product.name }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="editPrice{{ product.id }}">Precio:</label>
+                                                <input type="number" id="editPrice{{ product.id }}" name="editPrice" class="form-control" value="{{ product.price }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="editImage{{ product.id }}">URL de la Imagen:</label>
+                                                <input type="url" id="editImage{{ product.id }}" name="editImage" class="form-control" value="{{ product.image_url }}" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                        </form>
+                                    </div>
+                                 </div>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+
+
+   <!-- Formulario para agregar usuarios -->
+        <h2 class="mt-4 ">Agregar Nuevo Usuario</h2>
+        <form method="post" action="{{ url_for('add_user') }}">
+            <div class="form-group">
+                <label for="username">Nombre de Usuario:</label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="full_name">Nombre Completo:</label>
+                <input type="text" id="full_name" name="full_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="user_type">Tipo de Usuario:</label>
+                <select id="user_type" name="user_type" class="form-control" required>
+                    <option value="1">Administrador</option>
+                    <option value="2">Cliente</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar Usuario</button>
+        </form>
+    </div>
+  
+
+
+    <div class="container mt-4">
+        <!-- Tabla de Usuarios -->
+        <h2>Usuarios Registrados</h2>
+        <div class="table-responsive">
+            <table class="table mt-3 ">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de Usuario</th>
+                        <th>Tipo de Usuario</th>
+                        <th>Nombre Completo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="usua">
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.get_user_type() }}</td>
+                        <td>{{ user.fullname }}</td>
+                        <td>
+                            <!-- Botón para mostrar el formulario de edición -->
+                            <button class="btn btn-primary" data-toggle="modal" data-target="#editUserModal{{ user.id }}">Editar</button>
+    
+                            <!-- Botón para eliminar usuario -->
+                            <button class="btn btn-danger" data-toggle="modal" data-target="#deleteUserModal{{ user.id }}">Eliminar</button>
+    
+                            <!-- Modal para el formulario de edición -->
+                            <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel{{ user.id }}" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editUserModalLabel{{ user.id }}">Editar Usuario</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form method="post" action="{{ url_for('edit_user', user_id=user.id) }}">
+                                                <input type="hidden" name="editUser" value="{{ user.id }}">
+                                                <div class="form-group">
+                                                    <label for="editUsername{{ user.id }}">Nombre de Usuario:</label>
+                                                    <input type="text" id="editUsername{{ user.id }}" name="editUsername" class="form-control" value="{{ user.username }}" required>
+                                                </div>
+                                                
+                                                <div class="form-group">
+                                                    <label for="editFullName{{ user.id }}">Nombre Completo:</label>
+                                                    <input type="text" id="editFullName{{ user.id }}" name="editFullName" class="form-control" value="{{ user.fullname }}" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="editUserType{{ user.id }}">Tipo de Usuario:</label>
+                                                    <select id="editUserType{{ user.id }}" name="editUserType" class="form-control" required>
+                                                        <option value="1" {% if user.get_user_type() == 1 %}selected{% endif %}>Administrador</option>
+                                                        <option value="2" {% if user.get_user_type() == 2 %}selected{% endif %}>Cliente</option>
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+    
+                            <!-- Modal para confirmar la eliminación -->
+                            <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">Confirmar Eliminación</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>¿Estás seguro de que deseas eliminar este usuario?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                            <form method="post" action="{{ url_for('delete_user', user_id=user.id) }}">
+                                                <input type="hidden" name="deleteUser" value="{{ user.id }}">
+                                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+
+
+
+
+
+
+
+<script>
+
+
+    function confirmDelete(productId) {
+        if (confirm("¿Estás seguro de que deseas borrar este producto?")) {
+          window.location.href = "{{ url_for('delete_product', product_id=0) }}" + productId;
+        }
+      }
+
+    function logout() {
+        localStorage.removeItem("userRole");
+        window.location.href = "login.html"; // Redirige al usuario a la página de inicio de sesión
+    }
+
+    const userRole = localStorage.getItem("userRole");
+
+    if (userRole === "admin") {
+        // Si el usuario es un administrador, mostrar el botón "Catálogo de Productos"
+        document.getElementById("adminContent").style.display = "block";
+    } else {
+        // Si el usuario es cliente, ocultar el botón "Catálogo de Productos"
+        document.getElementById("adminContent").style.display = "none";
+    }
+    function validateAndAddProduct() {
+        const productName = document.getElementById("productName").value;
+        const productPrice = document.getElementById("productPrice").value;
+        const productImage = document.getElementById("productImage").value;
+
+        const productNameError = document.getElementById("productNameError");
+        const productPriceError = document.getElementById("productPriceError");
+        const productImageError = document.getElementById("productImageError");
+
+        productNameError.textContent = '';
+        productPriceError.textContent = '';
+        productImageError.textContent = '';
+
+        if (productName.trim() === '') {
+            productNameError.textContent = 'El nombre del producto es requerido.';
+            productNameError.style.color = 'red';
+        }
+        if (productPrice.trim() === '') {
+            productPriceError.textContent = 'El precio del producto es requerido.';
+            productPriceError.style.color = 'red';
+        }
+        if (productImage.trim() === '') {
+            productImageError.textContent = 'La URL de la imagen es requerida.';
+            productImageError.style.color = 'red';
+        }
+
+        if (productName.trim() === '' || productPrice.trim() === '' || productImage.trim() === '') {
+            return;
+        }
+
+        addProduct(productName, productPrice, productImage);
+    }
+    // Inicializar la variable "products" desde el almacenamiento local
+    let products = JSON.parse(localStorage.getItem('products')) || [];
+    let nextProductId = products.length + 1;
+
+    // Función para agregar un producto
+    function addProduct(productName, productPrice, productImage) {
+        products.push({ id: nextProductId, name: productName, price: productPrice, image: productImage });
+        nextProductId++;
+        updateProductList();
+        saveProducts();
+        clearForm();
+    }
+
+    // Función para guardar la lista de productos en el almacenamiento local
+    function saveProducts() {
+        localStorage.setItem('products', JSON.stringify(products));
+    }
+
+    // Función para eliminar un producto
+    function removeProduct(productId) {
+        products = products.filter(product => product.id !== productId);
+        updateProductList();
+        saveProducts();
+    }
+
+    // Función para limpiar el formulario
+    function clearForm() {
+        document.getElementById("productName").value = "";
+        document.getElementById("productPrice").value = "";
+        document.getElementById("productImage").value = "";
+    }
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="container mt-3">
+      <div class="alert alert-warning">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}
+
+<script>
+    function logOut() {
+        // Agrega un registro de log al hacer clic en Logout
+        console.log("Usuario ha hecho Logout");
+    }
+</script>

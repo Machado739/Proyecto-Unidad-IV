@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+{% block miCSS %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='../../static/css/style.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% block titulo %}Tienda{% endblock %}
+
+{% block cuerpo %}
+    <script>
+
+        // Función para verificar si el usuario ha iniciado sesión
+        function checkUserLogin() {
+            const userRole = "{{ current_user.get_user_type() }}";
+            if (userRole !== "1" && userRole !== "2") {
+                // Redirige al usuario a la página de inicio de sesión si no ha iniciado sesión
+                window.location.href = "login";
+            }
+        }
+    
+        // Llama a la función de verificación al cargar la página
+        checkUserLogin();
+    </script>
+
+
+<!-- Barra de navegación -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+    <a class="navbar-brand" href="#">XTREMETEPC</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin') }}" id="adminContent" style="display: none">Catálogo de Productos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('shop') }}">Tienda</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('info') }}">Acerca de</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" id="calculadoraButton" data-toggle="modal" data-target="#calculadoraModal">Calculadora</a>
+            </li>
+            <li class="nav-item">
+                <a class="btn btn-light" href="{{ url_for('logout') }}" onclick="logOut()">Cerrar Sesion</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <img src="https://www.xtremetecpc.com/images/media/2022/11/armarpc2.png" class="img-fluid mt-4" alt="Imagen del banner">
+        </div>
+    </div>
+</div>
+
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-4">Tienda</h1>
+        </div>
+    </div>
+
+    
+    <!-- Mostrar productos -->
+<div class="row" id="productList">
+    {% for product in products %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 product">
+                <img src="{{ product.image_url }}" alt="Imagen del producto" class="card-img-top product-image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">Código: {{ product.id }}</p>
+                    <p class="card-text">Precio: ${{ product.price }}</p>
+                    <button class="btn btn-primary" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }})">Agregar al carrito</button>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+    
+
+
+    <div class="container mt-4">
+        <h2>Carrito de Compras</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre del Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                </tr>
+            </thead>
+            <tbody id="cartTableBody">
+                <!-- Aquí se insertarán las filas del carrito mediante JavaScript -->
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="showPurchaseModal()">Comprar</button>
+
+    </div>
+    <!-- Modal para ingresar la cantidad -->
+    <div class="modal fade" id="quantityModal" tabindex="-1" role="dialog" aria-labelledby="quantityModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quantityModalLabel">Seleccionar Cantidad</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="quantityInput">Cantidad:</label>
+                <input type="number" id="quantityInput" class="form-control" min="1" value="1">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="addProductToCart()">Agregar al carrito</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+<!-- Modal para mostrar el ticket de compra -->
+<div class="modal fade" id="purchaseModal" tabindex="-1" role="dialog" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="purchaseModalLabel">Ticket de Compra</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenido del ticket de compra -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nombre del Artículo</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseTableBody">
+                        <!-- Aquí se generará dinámicamente el contenido de la tabla -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2" class="text-right"><strong>Total:</strong></td>
+                            <td id="totalAmount">$0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<!-- Modal de la Calculadora -->
+<div id="calculadoraModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Calculadora</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenido de la calculadora -->
+                <h1>Calculadora</h1>
+                
+                <div id="calculator">
+                    <input type="text" id="display" readonly>
+                    <div id="buttons">
+                        <!-- Botones de la calculadora -->
+                        <button class="number">1</button>
+                        <button class="number">2</button>
+                        <button class="number">3</button>
+                        <button class="operator">+</button>
+                        <button class="number">4</button>
+                        <button class="number">5</button>
+                        <button class="number">6</button>
+                        <button class="operator">-</button>
+                        <button class="number">7</button>
+                        <button class="number">8</button>
+                        <button class="number">9</button>
+                        <button class="operator">*</button>
+                        <button class="operator">/</button>
+                        <button class="number">0</button>
+                        <button class="clear">C</button>
+                        <button class="equals">=</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- scrip de la calculadora -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+const display = document.getElementById("display");
+const buttons = document.getElementById("buttons");
+
+let firstValue = null;
+let currentOperator = null;
+let shouldClearDisplay = false;
+
+// Función para manejar los números y operadores
+function handleInput(input) {
+    if (input === "=") {
+        // Calcular el resultado cuando se presiona "="
+        if (firstValue !== null && currentOperator !== null) {
+            const num2 = parseFloat(display.value);
+            const result = calculate(firstValue, num2, currentOperator);
+            display.value = result;
+            firstValue = result;
+            currentOperator = null;
+        }
+    } else if (input === "C") {
+        // Limpiar el display cuando se presiona "C"
+        display.value = "";
+        firstValue = null;
+        currentOperator = null;
+    } else if (["+", "-", "*", "/"].includes(input)) {
+        // Manejar operadores
+        if (firstValue === null) {
+            firstValue = parseFloat(display.value);
+        } else if (currentOperator !== null) {
+            const num2 = parseFloat(display.value);
+            firstValue = calculate(firstValue, num2, currentOperator);
+        }
+        currentOperator = input;
+        shouldClearDisplay = true;
+    } else {
+        // Manejar números
+        if (shouldClearDisplay) {
+            display.value = "";
+            shouldClearDisplay = false;
+        }
+        display.value += input;
+    }
+}
+
+// Función para calcular el resultado
+function calculate(num1, num2, operator) {
+    switch (operator) {
+        case "+":
+            return num1 + num2;
+        case "-":
+            return num1 - num2;
+        case "*":
+            return num1 * num2;
+        case "/":
+            if (num2 !== 0) {
+                return num1 / num2;
+            } else {
+                return "Error";
+            }
+        default:
+            return num2;
+    }
+}
+
+ 
+// Agregar event listener para botones
+buttons.addEventListener("click", function (event) {
+    if (event.target.tagName === "BUTTON") {
+        const input = event.target.innerText;
+        handleInput(input);
+    }
+});
+});
+
+
+    const userRole = "{{ current_user.get_user_type() }}";
+
+    // Modifica 'adminContent' según el ID o clase del elemento que deseas mostrar/ocultar
+    if (userRole === "1") {
+        // Si el usuario es un administrador, muestra el contenido
+        document.getElementById("adminContent").style.display = "block";
+    } else {
+        // Si el usuario no es un administrador, oculta el contenido
+        document.getElementById("adminContent").style.display = "none";
+    
+}
+    function logout() 
+    {
+        localStorage.removeItem("userRole");
+        window.location.href = "login.html"; // Redirige al usuario a la página de inicio de sesión
+    }
+
+     if (userRole === "admin") 
+    {
+        document.getElementById("adminContent").style.display = "block";
+    }
+
+
+    // Funciones JavaScript para la tienda (simulación)
+    let availableProducts = JSON.parse(localStorage.getItem('products')) || [];
+    let cartItems = [];
+
+    function updateProductList() {
+        const productContainer = document.getElementById("productContainer");
+        productContainer.innerHTML = "";
+        availableProducts.forEach(product => {
+            const productColumn = document.createElement("div");
+            productColumn.className = "col-lg-3 col-md-6 col-sm-6 col-12 product";
+            productColumn.innerHTML = `
+                <div class="border p-3 mb-4 product-container">
+                    <div class="product-image">
+                        <img src="${product.image}" alt="Imagen del producto">
+                    </div>
+                    <div class="product-details">
+                        <p>Codigo: ${product.id}</p>
+                        <p>Nombre: ${product.name}</p>
+                        <p>Precio: $${product.price}</p>
+                    </div>
+                    <div class="product-actions">
+                        <button class="btn btn-outline-secondary" onclick="decrementQuantity('quantity-${product.id}')">-</button>
+                        <input type="number" id="quantity-${product.id}" class="quantity-input" value="1">
+                        <button class="btn btn-outline-secondary" onclick="incrementQuantity('quantity-${product.id}')">+</button>
+                        <button class="btn btn-success" onclick="addToCart(${product.id}, parseInt(document.getElementById('quantity-${product.id}').value))">Añadir al carrito</button>
+                    </div>
+                </div>`;
+            productContainer.appendChild(productColumn);
+        });
+    }
+    
+
+
+
+
+// Función para agregar un producto al carrito de compras
+window.addToCart = function (productId, productName, productPrice) {
+    // Abre el modal de cantidad
+    $('#quantityModal').modal('show');
+
+    // Define la función para agregar el producto al carrito al hacer clic en "Agregar al carrito" en el modal
+    window.addProductToCart = function () {
+        const quantity = document.getElementById("quantityInput").value;
+
+        // Crear un objeto que representa un elemento del carrito
+        const cartItem = {
+            product: {
+                id: productId,
+                name: productName,
+                price: productPrice,
+            },
+            quantity: parseInt(quantity),
+        };
+
+        // Agregar el elemento del carrito a la lista
+        cartItems.push(cartItem);
+
+        // Actualizar la interfaz de usuario
+        updateCartUI();
+
+        // Cerrar el modal
+        $('#quantityModal').modal('hide');
+    };
+};
+
+
+// Función para actualizar la interfaz del carrito de compras
+function updateCartUI() {
+    const cartTableBody = document.getElementById("cartTableBody");
+
+    // Limpiar el contenido actual de la tabla
+    cartTableBody.innerHTML = "";
+
+    // Iterar sobre los elementos del carrito y agregar filas a la tabla
+    cartItems.forEach(item => {
+        const row = cartTableBody.insertRow();
+        
+        // Agregar celdas con los detalles del producto
+        const cellName = row.insertCell(0);
+        const cellPrice = row.insertCell(1);
+        const cellQuantity = row.insertCell(2);
+
+        // Llenar las celdas con datos
+        cellName.textContent = item.product.name;
+        cellPrice.textContent = `$${item.product.price}`;
+        cellQuantity.textContent = item.quantity;
+    });
+}
+
+
+
+
+// Función para mostrar el modal con el ticket de compra
+function showPurchaseModal() {
+    // Obtener el elemento del modal de compra
+    const purchaseModal = $('#purchaseModal');
+
+    // Limpiar el contenido anterior del modal
+    purchaseModal.find('.modal-body').html('');
+
+    // Agregar el contenido del ticket de compra al modal
+    const purchaseContent = document.createElement('div');
+    purchaseContent.innerHTML = '<h3>Ticket de Compra</h3>';
+    purchaseContent.innerHTML += '<p>Detalles de la compra:</p>';
+
+    // Iterar sobre los elementos del carrito y agregarlos al ticket de compra
+    cartItems.forEach(item => {
+        purchaseContent.innerHTML += `<p>${item.product.name} - Cantidad: ${item.quantity} - Precio: $${item.product.price * item.quantity}</p>`;
+    });
+
+    // Agregar el contenido al modal
+    purchaseModal.find('.modal-body').append(purchaseContent);
+
+    // Mostrar el modal
+    purchaseModal.modal('show');
+}
+
+
+
+
+
+
+
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+{% endblock %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="container mt-3">
+      <div class="alert alert-warning">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}
+
+<script>
+function logOut() {
+    // Agrega un registro de log al hacer clic en Logout
+    console.log("Usuario ha hecho Logout");
+}
+</script>
